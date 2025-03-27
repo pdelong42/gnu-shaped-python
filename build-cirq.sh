@@ -14,7 +14,7 @@ NAME=Python-${VERSION}
 TARBALL=${NAME}.tar.xz
 URL=https://www.python.org/ftp/python/${VERSION}/${TARBALL}
 STUFF=${HOME}/Stuff
-PREFIX=${STUFF}/Builds/${NAME}
+PREFIX=${STUFF}/Builds/${NAME}-cirq
 BIN=${PREFIX}/bin
 PIPINST="${BIN}/python3 -m pip install"
 

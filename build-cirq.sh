@@ -4,19 +4,20 @@
 #
 # script -c ./build.sh $(date +%F_%T).log
 
-# For the moment, this is very specific to the Cirq use-case.  But I intend to
-# come back and generalize this, and make bits of it into more reusable chunks.
-
 set -xeuo pipefail
 
+PACKAGE=cirq
+CODEPENDENCIES="setuptools cirq-core[contrib]"
 VERSION=3.12.8
+# cannot upgrade to latest Python version yet, because modules (or depedencies) fail to build there
+#VERSION=3.13.2
 NAME=Python-${VERSION}
 TARBALL=${NAME}.tar.xz
 URL=https://www.python.org/ftp/python/${VERSION}/${TARBALL}
 STUFF=${HOME}/Stuff
-PREFIX=${STUFF}/Builds/${NAME}-cirq
+PREFIX=${STUFF}/Builds/${NAME}/${PACKAGE}
 BIN=${PREFIX}/bin
-PIPINST="${BIN}/python3 -m pip install"
+MAKE="make -j"
 
 SCRATCH=$(mktemp -d)
 
@@ -35,14 +36,11 @@ tar Jxv < $TARBALL
 cd $NAME
 
 ./configure --prefix=${PREFIX}
-make
-make test 
-make install
+$MAKE
+$MAKE test
+$MAKE install
 
-# the rest is cribbed from https://quantumai.google/cirq/start/install
-
-$PIPINST --upgrade pip
-$PIPINST cirq setuptools 'cirq-core[contrib]'
+${BIN}/python3 -m pip install --upgrade pip $PACKAGE $CODEPENDENCIES
 
 # The URL referenced earlier also advises the installation of packages outside
 # of the Python runtime.  It was couched in terms of Debian-based package
@@ -50,13 +48,3 @@ $PIPINST cirq setuptools 'cirq-core[contrib]'
 # around to it.
 #
 #sudo apt-get install texlive-latex-base latexmk
-
-# Part of the old process that I had shelved.  On my first pass, I still kept
-# using the virtualenv, until I realized that was no longer necessary.  If
-# we're building an entire dedicated Python runtime just to host the modules we
-# want to use, then virtualenv is redundant.
-#
-#${BIN}/pip3 install setuptools virtualenv
-#${BIN}/virtualenv ${STUFF}/python-virtual-envs/cirq-runtime
-#source ${STUFF}/python-virtual-envs/cirq-runtime/bin/activate
-#pip install cirq

@@ -9,17 +9,22 @@
 
 set -xeuo pipefail
 
-PACKAGE=awscli
-CODEPENDENCIES=
-VERSION=3.13.2
-NAME=Python-${VERSION}
-TARBALL=${NAME}.tar.xz
-URL=https://www.python.org/ftp/python/${VERSION}/${TARBALL}
+DISTROVERSION=3.13.7
+DISTNAME=Python-${DISTROVERSION}
+DISTTAR=${DISTNAME}.tar.xz
+DISTURL=https://www.python.org/ftp/python/${DISTROVERSION}/${DISTTAR}
+
+PACKAGEVERSION=2.31.2
+PACKNAME=aws-cli-${PACKAGEVERSION}
+PACKTAR=${PACKAGEVERSION}.tar.gz
+PACKURL=https://github.com/aws/aws-cli/archive/refs/tags/${PACKTAR}
+
 STUFF=${HOME}/Stuff
-PREFIX=${STUFF}/Builds/${NAME}/${PACKAGE}
+PREFIX=${STUFF}/Builds/${DISTNAME}/${PACKNAME}
 BIN=${PREFIX}/bin
 MAKE="make -j"
 
+OLDDIR=${PWD}
 SCRATCH=$(mktemp -d)
 
 function cleanup {
@@ -30,15 +35,34 @@ trap cleanup HUP INT STOP TERM QUIT EXIT
 
 cd $SCRATCH
 
-wget $URL
+wget $DISTURL
 
-tar Jxv < $TARBALL
+tar Jxv < $DISTTAR
 
-cd $NAME
+pushd $DISTNAME
 
 ./configure --prefix=${PREFIX}
 $MAKE
 $MAKE test
 $MAKE install
 
-${BIN}/python3 -m pip install --upgrade pip $PACKAGE $CODEPENDENCIES
+#ncp config.log $OLDDIR
+
+popd
+
+PIPINST="${BIN}/python3 -m pip install"
+
+wget $PACKURL
+
+tar zxv < $PACKTAR
+
+pushd $PACKNAME
+
+$PIPINST --upgrade pip
+$PIPINST -r requirements-dev-lock.txt
+$PIPINST .
+#$PIPINST -e .
+
+#aws --version
+#./scripts/gen-ac-index --include-builtin-index
+#aws --cli-auto-prompt
